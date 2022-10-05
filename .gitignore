@@ -1,0 +1,11 @@
+.vs/
+code/Backup/
+code/UpgradeLog.htm
+*/**/bin/Debug
+*/**/bin/Release
+*/**/obj/Debug
+*/**/obj/Release
+_ReSharper.Caches/
+*.suo
+/WPFTemplate/obj/
+*.csproj.user
