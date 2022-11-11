@@ -1,6 +1,6 @@
-﻿using System.Windows;
+using System.Windows;
 
-namespace WPFTemplate
+namespace VolumeLock
 {
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
@@ -11,5 +11,7 @@ namespace WPFTemplate
 		{
 			this.InitializeComponent();
 		}
+
+
 	}
 }

@@ -7,5 +7,5 @@ code/UpgradeLog.htm
 */**/obj/Release
 _ReSharper.Caches/
 *.suo
-/WPFTemplate/obj/
+/VolumeLock/obj/
 *.csproj.user

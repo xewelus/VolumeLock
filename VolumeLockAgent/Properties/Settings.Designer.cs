@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace WPFTemplate.Properties
+namespace VolumeLockAgent.Properties
 {
 
 

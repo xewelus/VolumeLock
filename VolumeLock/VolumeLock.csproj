@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<OutputType>WinExe</OutputType>
-		<RootNamespace>WPFTemplate</RootNamespace>
-		<AssemblyName>WPFTemplate</AssemblyName>
+		<RootNamespace>VolumeLock</RootNamespace>
+		<AssemblyName>VolumeLock</AssemblyName>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<UseWPF>true</UseWPF>
 		<LangVersion>latest</LangVersion>
