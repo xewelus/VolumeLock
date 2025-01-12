@@ -75,5 +75,11 @@
   <ItemGroup>
     <None Include="icon.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CSCommon\Common\Common.csproj">
+      <Project>{F611885D-38B2-4C9C-B736-08312C0F19DD}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

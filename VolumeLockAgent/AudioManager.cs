@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Runtime.InteropServices;
 
 namespace VideoPlayerController
@@ -242,7 +243,7 @@ namespace VideoPlayerController
 			Marshal.ReleaseComObject(volume);
 		}
 
-		private static ISimpleAudioVolume GetVolumeObject(int pid)
+		public static ISimpleAudioVolume GetVolumeObject(int pid)
 		{
 			IMMDeviceEnumerator deviceEnumerator = null;
 			IAudioSessionEnumerator sessionEnumerator = null;
@@ -309,11 +310,11 @@ namespace VideoPlayerController
 
 	[ComImport]
 	[Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
-	internal class MMDeviceEnumerator
+	public class MMDeviceEnumerator
 	{
 	}
 
-	internal enum EDataFlow
+	public enum EDataFlow
 	{
 		eRender,
 		eCapture,
@@ -321,7 +322,7 @@ namespace VideoPlayerController
 		EDataFlow_enum_count
 	}
 
-	internal enum ERole
+	public enum ERole
 	{
 		eConsole,
 		eMultimedia,
@@ -329,28 +330,230 @@ namespace VideoPlayerController
 		ERole_enum_count
 	}
 
-	[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-	internal interface IMMDeviceEnumerator
+	/// <summary>
+	/// Device State
+	/// </summary>
+	[Flags]
+	public enum DeviceState
 	{
-		int NotImpl1();
+		/// <summary>
+		/// DEVICE_STATE_ACTIVE
+		/// </summary>
+		Active = 0x00000001,
+		/// <summary>
+		/// DEVICE_STATE_DISABLED
+		/// </summary>
+		Disabled = 0x00000002,
+		/// <summary>
+		/// DEVICE_STATE_NOTPRESENT 
+		/// </summary>
+		NotPresent = 0x00000004,
+		/// <summary>
+		/// DEVICE_STATE_UNPLUGGED
+		/// </summary>
+		Unplugged = 0x00000008,
+		/// <summary>
+		/// DEVICE_STATEMASK_ALL
+		/// </summary>
+		All = 0x0000000F
+	}
 
-		[PreserveSig]
-		int GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role, out IMMDevice ppDevice);
+	[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	interface IMMDeviceEnumerator
+	{
+		int EnumAudioEndpoints(EDataFlow dataFlow, DeviceState stateMask, out IMMDeviceCollection devices);
+
+		int GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role, out IMMDevice endpoint);
+
+		int GetDevice(string id, out IMMDevice deviceName);
 
 		// the rest is not implemented
 	}
 
+	[Guid("0BD7A1BE-7A1A-44DB-8397-CC5392387B5E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	interface IMMDeviceCollection
+	{
+		int GetCount(out int numDevices);
+		int Item(int deviceNumber, out IMMDevice device);
+	}
+
+	[Guid("BCDE0395-E52F-467C-8E3D-C4579291692E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	public interface MMDeviceEnumeratorComObject
+	{
+	}
+
 	[Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-	internal interface IMMDevice
+	public interface IMMDevice
 	{
 		[PreserveSig]
 		int Activate(ref Guid iid, int dwClsCtx, IntPtr pActivationParams, [MarshalAs(UnmanagedType.IUnknown)] out object ppInterface);
 
-		// the rest is not implemented
+		[PreserveSig]
+		int OpenPropertyStore(StorageAccessMode stgmAccess, out IPropertyStore properties);
+
+		[PreserveSig]
+		int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);
+
+		[PreserveSig]
+		int GetState(out DeviceState state);
+	}
+
+	/// <summary>
+	/// MMDevice STGM enumeration
+	/// </summary>
+	public enum StorageAccessMode
+	{
+		Read,
+		Write,
+		ReadWrite
+	}
+
+	/// <summary>
+	/// is defined in propsys.h
+	/// </summary>
+	[Guid("886d8eeb-8cf2-4446-8d02-cdba1dbdcf99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	public interface IPropertyStore
+	{
+		int GetCount(out int propCount);
+		int GetAt(int property, out PropertyKey key);
+		int GetValue(ref PropertyKey key, out PropVariant value);
+		int SetValue(ref PropertyKey key, ref PropVariant value);
+		int Commit();
+	}
+
+	/// <summary>
+	/// from Propidl.h.
+	/// http://msdn.microsoft.com/en-us/library/aa380072(VS.85).aspx
+	/// contains a union so we have to do an explicit layout
+	/// </summary>
+	[StructLayout(LayoutKind.Explicit)]
+	public struct PropVariant
+	{
+		[FieldOffset(0)] short vt;
+		[FieldOffset(2)] short wReserved1;
+		[FieldOffset(4)] short wReserved2;
+		[FieldOffset(6)] short wReserved3;
+		[FieldOffset(8)] sbyte cVal;
+		[FieldOffset(8)] byte bVal;
+		[FieldOffset(8)] short iVal;
+		[FieldOffset(8)] ushort uiVal;
+		[FieldOffset(8)] int lVal;
+		[FieldOffset(8)] uint ulVal;
+		[FieldOffset(8)] int intVal;
+		[FieldOffset(8)] uint uintVal;
+		[FieldOffset(8)] long hVal;
+		[FieldOffset(8)] long uhVal;
+		[FieldOffset(8)] float fltVal;
+		[FieldOffset(8)] double dblVal;
+		[FieldOffset(8)] bool boolVal;
+		[FieldOffset(8)] int scode;
+		//CY cyVal;
+		[FieldOffset(8)] DateTime date;
+		[FieldOffset(8)] System.Runtime.InteropServices.ComTypes.FILETIME filetime;
+		//CLSID* puuid;
+		//CLIPDATA* pclipdata;
+		//BSTR bstrVal;
+		//BSTRBLOB bstrblobVal;
+		[FieldOffset(8)] Blob blobVal;
+		//LPSTR pszVal;
+		[FieldOffset(8)] IntPtr pwszVal; //LPWSTR 
+		
+		/// <summary>
+		/// Helper method to gets blob data
+		/// </summary>
+		byte[] GetBlob()
+		{
+			byte[] Result = new byte[blobVal.Length];
+			Marshal.Copy(blobVal.Data, Result, 0, Result.Length);
+			return Result;
+		}
+
+		/// <summary>
+		/// Property value
+		/// </summary>
+		public object Value
+		{
+			get
+			{
+				VarEnum ve = (VarEnum)vt;
+				switch (ve)
+				{
+					case VarEnum.VT_I1:
+						return bVal;
+					case VarEnum.VT_I2:
+						return iVal;
+					case VarEnum.VT_I4:
+						return lVal;
+					case VarEnum.VT_I8:
+						return hVal;
+					case VarEnum.VT_INT:
+						return iVal;
+					case VarEnum.VT_UI4:
+						return ulVal;
+					case VarEnum.VT_LPWSTR:
+						return Marshal.PtrToStringUni(pwszVal);
+					case VarEnum.VT_BLOB:
+						return GetBlob();
+				}
+				throw new NotImplementedException("PropVariant " + ve.ToString());
+			}
+		}
+
+		public override string ToString()
+		{
+			VarEnum ve = (VarEnum)vt;
+			if (ve == VarEnum.VT_LPWSTR)
+			{
+				return Marshal.PtrToStringUni(pwszVal);
+			}
+			else
+			{
+				return ve.ToString();
+			}
+		}
+	}
+
+	internal struct Blob
+	{
+		public int Length;
+		public IntPtr Data;
+
+		//Code Should Compile at warning level4 without any warnings, 
+		//However this struct will give us Warning CS0649: Field [Fieldname] 
+		//is never assigned to, and will always have its default value
+		//You can disable CS0649 in the project options but that will disable
+		//the warning for the whole project, it's a nice warning and we do want 
+		//it in other places so we make a nice dummy function to keep the compiler
+		//happy.
+		private void FixCS0649()
+		{
+			Length = 0;
+			Data = IntPtr.Zero;
+		}
+	}
+
+	/// <summary>
+	/// PROPERTYKEY is defined in wtypes.h
+	/// </summary>
+	public struct PropertyKey
+	{
+		/// <summary>
+		/// Format ID
+		/// </summary>
+		public Guid formatId;
+		/// <summary>
+		/// Property ID
+		/// </summary>
+		public int propertyId;
+
+		public override string ToString()
+		{
+			return $"PropertyKey {this.propertyId} {this.formatId}";
+		}
 	}
 
 	[Guid("77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-	internal interface IAudioSessionManager2
+	public interface IAudioSessionManager2
 	{
 		int NotImpl1();
 		int NotImpl2();
@@ -362,7 +565,7 @@ namespace VideoPlayerController
 	}
 
 	[Guid("E2F5BB11-0570-40CA-ACDD-3AA01277DEE8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-	internal interface IAudioSessionEnumerator
+	public interface IAudioSessionEnumerator
 	{
 		[PreserveSig]
 		int GetCount(out int SessionCount);
@@ -372,7 +575,7 @@ namespace VideoPlayerController
 	}
 
 	[Guid("87CE5498-68D6-44E5-9215-6DA47EF883D8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-	internal interface ISimpleAudioVolume
+	public interface ISimpleAudioVolume
 	{
 		[PreserveSig]
 		int SetMasterVolume(float fLevel, ref Guid EventContext);
@@ -388,7 +591,7 @@ namespace VideoPlayerController
 	}
 
 	[Guid("bfb7ff88-7239-4fc9-8fa2-07c950be9c6d"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-	internal interface IAudioSessionControl2
+	public interface IAudioSessionControl2
 	{
 		// IAudioSessionControl
 		[PreserveSig]

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -17,6 +20,50 @@ namespace VolumeLockAgent
 		[STAThread]
 		static void Main()
 		{
+			IMMDeviceEnumerator deviceEnumerator = null;
+			IMMDeviceCollection devices = null;
+			Dictionary<IMMDevice, Dictionary<PropertyKey, PropVariant>> list = new Dictionary<IMMDevice, Dictionary<PropertyKey, PropVariant>>();
+			try
+			{
+				deviceEnumerator = (IMMDeviceEnumerator)(new MMDeviceEnumerator());
+				deviceEnumerator.EnumAudioEndpoints(EDataFlow.eAll, DeviceState.Active, out devices);
+
+				int numDevices;
+				devices.GetCount(out numDevices);
+
+				for (int i = 0; i < numDevices; i++)
+				{
+					IMMDevice device;
+					devices.Item(i, out device);
+
+					IPropertyStore propertyStore;
+					device.OpenPropertyStore(StorageAccessMode.Read, out propertyStore);
+
+					int propCount;
+					propertyStore.GetCount(out propCount);
+
+					Dictionary<PropertyKey, PropVariant> dic = new Dictionary<PropertyKey, PropVariant>();
+					for (int propIndex = 0; propIndex < propCount; propIndex++)
+					{
+						PropertyKey propertyKey;
+						propertyStore.GetAt(propIndex, out propertyKey);
+
+						PropVariant propVariant;
+						propertyStore.GetValue(ref propertyKey, out propVariant);
+
+						dic[propertyKey] = propVariant;
+					}
+
+					list.Add(device, dic);
+				}
+			}
+			finally
+			{
+				list.Keys.ToList().ForEach(device => Marshal.ReleaseComObject(device));
+				if (devices != null) Marshal.ReleaseComObject(devices);
+				if (deviceEnumerator != null) Marshal.ReleaseComObject(deviceEnumerator);
+			}
+
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
